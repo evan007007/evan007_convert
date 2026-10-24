@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>节点格式转换工具</title>
+    <style>
+        :root {
+            --bg-color: #f7f8f9;
+            --card-bg: #ffffff;
+            --primary-color: #0d7a6b;
+            --primary-hover: #0a6457;
+            --text-main: #333333;
+            --text-secondary: #666666;
+            --text-light: #999999;
+            --border-color: #e5e7eb;
+            --input-bg: #f9fafb;
+            --code-bg: #f3f4f6;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 24px;
+        }
+        .header .subtitle {
+            color: var(--primary-color);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Card */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .btn-text:hover { 
+            color: var(--text-main); 
+            background-color: #f0f0f0;
+        }
+
+        /* Textarea */
+        textarea {
+            width: 100%;
+            min-height: 160px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            font-family: monospace;
+            font-size: 13px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea:focus {
+            border-color: var(--primary-color);
+        }
+        textarea::placeholder {
+            color: #ccc;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .btn-outline:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Form Grid */
+        .section-title {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-main);
+            background-color: var(--input-bg);
+            outline: none;
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 10px auto;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+        }
+        .checkbox-group label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Results */
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .result-block {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .result-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: #fafafa;
+        }
+        
+        .result-block-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .dot.vless { background-color: #0ea5e9; }
+        .dot.vmess { background-color: #8b5cf6; }
+        .dot.anytls { background-color: #f59e0b; }
+        .dot.hysteria2 { background-color: #ef4444; }
+        .dot.trojan { background-color: #f97316; }
+        .dot.ss { background-color: #3b82f6; }
+        .dot.singbox { background-color: #6b7280; }
+
+        .btn-copy {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-copy:hover {
+            background-color: #f0f0f0;
+            color: var(--text-main);
+        }
+
+        .result-content {
+            padding: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-main);
+            background-color: var(--card-bg);
+            word-break: break-all;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: left;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-top: 32px;
+            padding-bottom: 40px;
+        }
+
+        /* Utils */
+        .hidden {
+            display: none !important;
+        }
+
+        /* History Section */
+        .history-list {
+            list-style: none;
+            margin-top: 8px;
+        }
+        
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+            border-radius: 8px;
+            padding-left: 12px;
+            padding-right: 12px;
+            margin: 0 -12px;
+        }
+        .history-item:hover {
+            background-color: #f9fafb;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .history-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background-color: var(--primary-color); /* 默认颜色 */
+        }
+
+        .history-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .history-title {
+            font-size: 16px;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .history-meta {
+            font-size: 13px;
+            color: #d1d5db; /* 极浅的灰色，对应截图 */
+        }
+
+        .history-delete {
+            background: none;
+            border: none;
+            color: #d1d5db;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+        .history-delete:hover {
+            color: #ef4444; /* 悬停变红 */
+        }
+
+        .history-footer {
+            text-align: left;
+            font-size: 12px;
+            color: #e5e7eb;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        #toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="subtitle">PROXY NODE TOOL</div>
+        <h1>节点格式转换</h1>
+        <p>粘贴任意节点配置，一键生成 vless / vmess / anytls / hysteria2 / trojan / ss 与 sing-box JSON。</p>
+    </div>
+
+    <!-- 输入卡片 -->
+    <div class="card">
+        <div class="card-header">
+            粘贴节点配置
+            <button class="btn-text" id="btnClear">清空</button>
+        </div>
+        <textarea id="inputData" placeholder="粘贴 sing-box JSON 或分享链接，例如：
+vless://...
+vmess://...
+hysteria2://...
+每行一个，可批量转换"></textarea>
+        <div class="helper-text">
+            支持 vless / vmess / anytls / hysteria2 / trojan / ss 链接，以及 sing-box JSON。多行批量粘贴自动逐条解析。
+        </div>
+        <div class="actions">
+            <button class="btn btn-primary" id="btnConvert">开始转换</button>
+            <button class="btn btn-outline" id="btnLoadExample">载入示例</button>
+        </div>
+    </div>
+
+    <!-- 节点信息 -->
+    <div class="card hidden" id="nodeInfoCard">
+        <div class="card-header">
+            节点信息
+            <span class="btn-text" style="font-weight: normal; cursor: default;">修改下方所有格式将实时更新</span>
+        </div>
+        
+        <div class="section-title">基础信息</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>协议类型</label>
+                <select class="form-control" id="protoType">
+                    <option value="vless">vless</option>
+                    <option value="vmess">vmess</option>
+                    <option value="anytls">anytls</option>
+                    <option value="hysteria2">hysteria2</option>
+                    <option value="trojan">trojan</option>
+                    <option value="ss">ss</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>节点名称</label>
+                <input type="text" class="form-control" id="nodeName" value="🔴 AWS日本03 | 电信移动联通推荐">
+            </div>
+            <div class="form-group">
+                <label>服务器地址</label>
+                <input type="text" class="form-control" id="serverAddr" value="pq.aws50.yydjc.top">
+            </div>
+            <div class="form-group">
+                <label>端口</label>
+                <input type="text" class="form-control" id="serverPort" value="443">
+            </div>
+            <div class="form-group">
+                <label>UUID / 密码</label>
+                <input type="text" class="form-control" id="uuid" value="0df57c68-c04c-49b3-9351-08e1c3e7401b">
+            </div>
+            <div class="form-group">
+                <label>Flow</label>
+                <input type="text" class="form-control" id="flow" value="xtls-rprx-vision">
+            </div>
+            <div class="form-group">
+                <label>加密方式 (ss)</label>
+                <input type="text" class="form-control" id="encrypt" value="aes-256-gcm">
+            </div>
+            <div class="form-group">
+                <label>Packet 编码</label>
+                <input type="text" class="form-control" id="packetEncoding" value="xudp">
+            </div>
+        </div>
+
+        <div class="section-title">传输配置</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>传输协议</label>
+                <select class="form-control" id="transport">
+                    <option value="tcp">tcp</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Header 类型</label>
+                <select class="form-control" id="headerType">
+                    <option value="none">none</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Path</label>
+                <input type="text" class="form-control" id="path" value="/path">
+            </div>
+            <div class="form-group">
+                <label>Host</label>
+                <input type="text" class="form-control" id="host" value="www.example.com" placeholder="www.example.com">
+            </div>
+            <div class="form-group">
+                <label>伪装 (hy2)</label>
+                <input type="text" class="form-control" id="obfs" value="salamander">
+            </div>
+            <div class="form-group">
+                <label>伪装密码 (hy2)</label>
+                <input type="text" class="form-control" id="obfsPassword">
+            </div>
+            <div class="form-group">
+                <label>插件 (ss)</label>
+                <input type="text" class="form-control" id="plugin">
+            </div>
+        </div>
+
+        <div class="section-title">TLS / REALITY</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>安全设置</label>
+                <select class="form-control" id="security">
+                    <option value="reality">reality</option>
+                    <option value="tls">tls</option>
+                    <option value="none">none</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>SNI</label>
+                <input type="text" class="form-control" id="sni" value="iosapps.itunes.apple.com">
+            </div>
+            <div class="form-group">
+                <label>指纹 Fingerprint</label>
+                <input type="text" class="form-control" id="fingerprint" value="ios">
+            </div>
+            <div class="form-group">
+                <label>PublicKey</label>
+                <input type="text" class="form-control" id="publicKey" value="pR8CV43xvSgvzSXPVLCVomjw-yZvNyqU32kietO2pEc">
+            </div>
+            <div class="form-group">
+                <label>ShortId</label>
+                <input type="text" class="form-control" id="shortId" value="a6115a2c">
+            </div>
+            <div class="form-group">
+                <label>ALPN</label>
+                <input type="text" class="form-control" id="alpn" value="h2,http/1.1">
+            </div>
+        </div>
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="allowInsecure">
+            <label for="allowInsecure">允许不安全连接</label>
+        </div>
+    </div>
+
+    <!-- 转换结果 -->
+    <div class="card hidden" id="resultCard">
+        <div class="result-header">
+            转换结果
+            <button class="btn btn-primary" style="padding: 6px 16px; font-size: 13px;" onclick="copyAll()">复制全部格式</button>
+        </div>
+        
+        <!-- VLESS -->
+        <div class="result-block">
+            <div class="result-block-header">
+                <div class="result-block-title">
+                    <span class="dot vless"></span> VLESS
+                </div>
+                <button class="btn-copy" onclick="copyText('vlessResult', this)">复制</button>
+            </div>
+            <div class="result-content" id="vlessResult"></div>
+        </div>
+
+        <!-- VMess -->
+        <div class="result-block">
+            <div class="result-block-header">
+                <div class="result-block-title">
+                    <span class="dot vmess"></span> VMess
+                </div>
+                <button class="btn-copy" onclick="copyText('vmessResult', this)">复制</button>
+            </div>
+            <div class="result-content" id="vmessResult"></div>
+        </div>
+
+        <!-- AnyTLS -->
+        <div class="result-block">
+            <div class="result-block-header">
+                <div class="result-block-title">
+                    <span class="dot anytls"></span> AnyTLS
+                </div>
+                <button class="btn-copy" onclick="copyText('anytlsResult', this)">复制</button>
+            </div>
+            <div class="result-content" id="anytlsResult"></div>
+        </div>
+
+        <!-- Hysteria2 -->
+        <div class="result-block">
+            <div class="result-block-header">
+                <div class="result-block-title">
+                    <span class="dot hysteria2"></span> Hysteria2
+                </div>
+                <button class="btn-copy" onclick="copyText('hysteria2Result', this)">复制</button>
+            </div>
+            <div class="result-content" id="hysteria2Result"></div>
+        </div>
+
+        <!-- Trojan -->
+        <div class="result-block">
+            <div class="result-block-header">
+                <div class="result-block-title">
+                    <span class="dot trojan"></span> Trojan
+                </div>
+                <button class="btn-copy" onclick="copyText('trojanResult', this)">复制</button>
+            </div>
+            <div class="result-content" id="trojanResult"></div>
+        </div>
+
+        <!-- ShadowSocks -->
+        <div class="result-block">
+            <div class="result-block-header">
+                <div class="result-block-title">
+                    <span class="dot ss"></span> ShadowSocks
+                </div>
+                <button class="btn-copy" onclick="copyText('ssResult', this)">复制</button>
+            </div>
+            <div class="result-content" id="ssResult"></div>
+        </div>
+
+        <!-- sing-box JSON -->
+        <div class="result-block">
+            <div class="result-block-header">
+                <div class="result-block-title">
+                    <span class="dot singbox"></span> sing-box JSON
+                </div>
+                <button class="btn-copy" onclick="copyText('singboxResult', this)">复制</button>
+            </div>
+            <div class="result-content" id="singboxResult"></div>
+        </div>
+
+    </div>
+
+    <!-- 解析历史 -->
+    <div class="card">
+        <div class="card-header">
+            <span>解析历史</span>
+            <div class="card-header-actions">
+                <button class="btn-text" id="btnClearAllHistory">清除历史</button>
+                <button class="btn-text" id="btnRefreshHistory">刷新</button>
+            </div>
+        </div>
+        <div id="historyContainer" style="color: var(--text-light); font-size: 14px; padding: 10px 0;">
+            暂无历史记录，解析成功后会保存在这里。
+        </div>
+        <ul class="history-list hidden" id="historyList"></ul>
+        <div class="history-footer hidden" id="historyFooter">
+            最近同步：<span id="lastSyncTime"></span>
+        </div>
+    </div>
+
+    <!-- 底部声明 -->
+    <div class="footer">
+        本工具仅做节点配置的格式整理与转换，不校验服务器可用性；跨协议转换仅映射共有字段，独有参数在目标格式不支持时会被舍去。
+    </div>
+</div>
+
+<div id="toast">已复制到剪贴板</div>
+
+<script>
+    // 使用对象形式定义示例数据
+    const exampleDataObj = {
+        groupid: "fe9350a2-22ea-484b-b331-44eb901b7d3d",
+        attach: "",
+        latency: "96",
+        outlet_ip: "",
+        outlet_region: "",
+        server: "pq.aws50.yydjc.top",
+        server_port: 443,
+        tag: "🔴 AWS日本03 | 电信移动联通推荐",
+        type: "vless",
+        uuid: "0df57c68-c04c-49b3-9351-08e1c3e7401b",
+        flow: "xtls-rprx-vision",
+        packet_encoding: "xudp",
+        tls: {
+            enabled: true,
+            server_name: "iosapps.itunes.apple.com",
+            utls: {
+                enabled: true,
+                fingerprint: "ios"
+            },
+            reality: {
+                enabled: true,
+                public_key: "pR8CV43xvSgvzSXPVLCVomjw-yZvNyqU32kietO2pEc",
+                short_id: "a6115a2c"
+            }
+        }
+    };
+
+    // 初始化
+    document.getElementById('btnLoadExample').addEventListener('click', () => {
+        const exampleStr = JSON.stringify(exampleDataObj, null, 2);
+        document.getElementById('inputData').value = exampleStr;
+        processInput(exampleStr); 
+    });
+
+    document.getElementById('btnConvert').addEventListener('click', () => {
+        const input = document.getElementById('inputData').value.trim();
+        processInput(input);
+    });
+
+    // 清空输入框逻辑
+    document.getElementById('btnClear').addEventListener('click', () => {
+        document.getElementById('inputData').value = '';
+        document.getElementById('nodeInfoCard').classList.add('hidden');
+        document.getElementById('resultCard').classList.add('hidden');
+    });
+
+    // 处理输入内容
+    function processInput(rawInput) {
+        const input = rawInput.trim();
+        if (!input) {
+            showToast("请先粘贴节点配置");
+            return;
+        }
+
+        // 尝试解析 JSON
+        if (input.includes('{') && input.includes('}')) {
+            try {
+                const startIdx = input.indexOf('{');
+                const endIdx = input.lastIndexOf('}');
+                if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+                    const jsonStr = input.substring(startIdx, endIdx + 1);
+                    const json = JSON.parse(jsonStr);
+                    fillFormAndGenerate(json);
+                    return;
+                }
+            } catch (e) {
+                console.error("JSON Parse Error:", e);
+                if (!input.includes('://')) {
+                    showToast("解析失败，请检查配置格式");
+                    return;
+                }
+            }
+        }
+
+        // 处理链接格式
+        const lines = input.split('\n').map(l => l.trim()).filter(l => l);
+        if (lines.length === 0) return;
+
+        const link = lines[0];
+        let nodeData = null;
+
+        if (link.startsWith('vless://')) {
+            nodeData = parseVlessLink(link);
+        } else if (link.startsWith('vmess://')) {
+            nodeData = parseVmessLink(link);
+        } else if (link.startsWith('hysteria2://') || link.startsWith('hy2://')) {
+            nodeData = parseHysteria2Link(link);
+        } else if (link.startsWith('trojan://')) {
+            nodeData = parseTrojanLink(link);
+        } else if (link.startsWith('ss://')) {
+            nodeData = parseSSLink(link);
+        } else {
+            showToast("暂不支持该协议链接解析或输入格式有误");
+            return;
+        }
+
+        if (nodeData) {
+            fillFormAndGenerate(nodeData);
+        } else {
+            showToast("链接解析失败，请检查格式");
+        }
+    }
+
+    // 解析 Vless
+    function parseVlessLink(link) {
+        try {
+            const url = new URL(link);
+            const params = new URLSearchParams(url.search);
+            return {
+                type: 'vless',
+                tag: decodeURIComponent(url.hash.substring(1)) || '未命名节点',
+                server: url.hostname,
+                server_port: url.port,
+                uuid: url.username,
+                flow: params.get('flow') || '',
+                packet_encoding: params.get('packetEncoding') || '',
+                tls: {
+                    enabled: params.get('security') === 'tls' || params.get('security') === 'reality',
+                    server_name: params.get('sni') || '',
+                    utls: { enabled: !!params.get('fp'), fingerprint: params.get('fp') || '' },
+                    reality: {
+                        enabled: params.get('security') === 'reality',
+                        public_key: params.get('pbk') || '',
+                        short_id: params.get('sid') || ''
+                    }
+                }
+            };
+        } catch (e) { return null; }
+    }
+
+    // 解析 VMess
+    function parseVmessLink(link) {
+        try {
+            const base64Str = link.replace('vmess://', '');
+            let decodedStr = decodeURIComponent(escape(atob(base64Str)));
+            const data = JSON.parse(decodedStr);
+            return {
+                type: 'vmess',
+                tag: data.ps || '未命名节点',
+                server: data.add,
+                server_port: data.port,
+                uuid: data.id,
+                tls: {
+                    enabled: data.tls === 'tls',
+                    server_name: data.sni || '',
+                    utls: { enabled: !!data.fp, fingerprint: data.fp || '' },
+                    reality: { enabled: false }
+                }
+            };
+        } catch (e) { return null; }
+    }
+
+    // 解析 Hysteria2
+    function parseHysteria2Link(link) {
+        try {
+            const url = new URL(link.replace('hy2://', 'hysteria2://'));
+            const params = new URLSearchParams(url.search);
+            return {
+                type: 'hysteria2',
+                tag: decodeURIComponent(url.hash.substring(1)) || '未命名节点',
+                server: url.hostname,
+                server_port: url.port,
+                uuid: url.username,
+                tls: {
+                    enabled: true,
+                    server_name: params.get('sni') || '',
+                    utls: { enabled: false, fingerprint: '' },
+                    reality: { enabled: false }
+                }
+            };
+        } catch (e) { return null; }
+    }
+
+    // 解析 Trojan
+    function parseTrojanLink(link) {
+        try {
+            const url = new URL(link);
+            const params = new URLSearchParams(url.search);
+            return {
+                type: 'trojan',
+                tag: decodeURIComponent(url.hash.substring(1)) || '未命名节点',
+                server: url.hostname,
+                server_port: url.port,
+                uuid: url.username,
+                tls: {
+                    enabled: params.get('security') === 'tls',
+                    server_name: params.get('sni') || '',
+                    utls: { enabled: false, fingerprint: '' },
+                    reality: { enabled: false }
+                }
+            };
+        } catch (e) { return null; }
+    }
+
+    // 解析 SS
+    function parseSSLink(link) {
+        try {
+            const url = new URL(link);
+            const userInfoBase64 = url.username;
+            const userInfo = atob(userInfoBase64);
+            const [method, password] = userInfo.split(':');
+            return {
+                type: 'ss',
+                tag: decodeURIComponent(url.hash.substring(1)) || '未命名节点',
+                server: url.hostname,
+                server_port: url.port,
+                uuid: password, 
+                encrypt: method,
+                tls: { enabled: false, reality: { enabled: false } }
+            };
+        } catch (e) { return null; }
+    }
+
+    // 填充表单并生成结果
+    function fillFormAndGenerate(data) {
+        document.getElementById('protoType').value = data.type || 'vless';
+        document.getElementById('nodeName').value = data.tag || '';
+        document.getElementById('serverAddr').value = data.server || '';
+        document.getElementById('serverPort').value = data.server_port || '';
+        document.getElementById('uuid').value = data.uuid || '';
+        document.getElementById('flow').value = data.flow || '';
+        document.getElementById('packetEncoding').value = data.packet_encoding || '';
+        if (data.encrypt) document.getElementById('encrypt').value = data.encrypt;
+
+        if (data.tls) {
+            if (data.tls.reality && data.tls.reality.enabled) {
+                document.getElementById('security').value = 'reality';
+                document.getElementById('publicKey').value = data.tls.reality.public_key || '';
+                document.getElementById('shortId').value = data.tls.reality.short_id || '';
+            } else if (data.tls.enabled) {
+                document.getElementById('security').value = 'tls';
+            } else {
+                document.getElementById('security').value = 'none';
+            }
+            document.getElementById('sni').value = data.tls.server_name || '';
+            if (data.tls.utls && data.tls.utls.enabled) {
+                document.getElementById('fingerprint').value = data.tls.utls.fingerprint || '';
+            } else {
+                document.getElementById('fingerprint').value = '';
+            }
+        }
+
+        try {
+            generateResults();
+        } catch (error) {
+            console.error("生成结果失败:", error);
+            return;
+        }
+
+        document.getElementById('nodeInfoCard').classList.remove('hidden');
+        document.getElementById('resultCard').classList.remove('hidden');
+        
+        // 添加历史记录
+        addHistory(data.type || 'vless', data.tag || data.server);
+        
+        setTimeout(() => {
+            document.getElementById('nodeInfoCard').scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    }
+
+    // 生成所有格式的结果
+    function generateResults() {
+        const type = document.getElementById('protoType').value;
+        const uuid = document.getElementById('uuid').value;
+        const server = document.getElementById('serverAddr').value;
+        const port = document.getElementById('serverPort').value;
+        const tag = encodeURIComponent(document.getElementById('nodeName').value);
+        const sni = document.getElementById('sni').value;
+        const pbk = document.getElementById('publicKey').value;
+        const sid = document.getElementById('shortId').value;
+        const fp = document.getElementById('fingerprint').value;
+        const flow = document.getElementById('flow').value;
+        const packetEncoding = document.getElementById('packetEncoding').value;
+        const security = document.getElementById('security').value;
+        const encrypt = document.getElementById('encrypt').value;
+        
+        // 1. VLESS
+        let vlessUrl = `vless://${uuid}@${server}:${port}?encryption=none`;
+        if (flow) vlessUrl += `&flow=${flow}`;
+        if (packetEncoding) vlessUrl += `&packetEncoding=${packetEncoding}`;
+        if (security !== 'none') {
+            vlessUrl += `&security=${security}`;
+            if (sni) vlessUrl += `&sni=${sni}`;
+            if (fp) vlessUrl += `&fp=${fp}`;
+            if (pbk) vlessUrl += `&pbk=${pbk}`;
+            if (sid) vlessUrl += `&sid=${sid}`;
+        }
+        vlessUrl += `#${tag}`;
+        document.getElementById('vlessResult').textContent = vlessUrl;
+
+        // 2. VMess
+        const vmessJson = {
+            v: "2", ps: decodeURIComponent(tag), add: server, port: port, id: uuid,
+            aid: "0", scy: "auto", net: "tcp", type: "none", host: sni, path: "",
+            tls: security !== 'none' ? "tls" : "", sni: sni, alpn: "", fp: fp
+        };
+        const vmessBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(vmessJson))));
+        document.getElementById('vmessResult').textContent = `vmess://${vmessBase64}`;
+
+        // 3. AnyTLS
+        let anytlsUrl = `anytls://${uuid}@${server}:${port}?sni=${sni}#${tag}`;
+        document.getElementById('anytlsResult').textContent = anytlsUrl;
+
+        // 4. Hysteria2
+        let hysteria2Url = `hysteria2://${uuid}@${server}:${port}?sni=${sni}`;
+        if (security === 'tls') hysteria2Url += `&insecure=1`;
+        hysteria2Url += `#${tag}`;
+        document.getElementById('hysteria2Result').textContent = hysteria2Url;
+
+        // 5. Trojan
+        let trojanUrl = `trojan://${uuid}@${server}:${port}?security=tls&sni=${sni}&type=tcp#${tag}`;
+        document.getElementById('trojanResult').textContent = trojanUrl;
+
+        // 6. ShadowSocks
+        const ssUserInfo = btoa(`${encrypt}:${uuid}`);
+        let ssUrl = `ss://${ssUserInfo}@${server}:${port}#${tag}`;
+        document.getElementById('ssResult').textContent = ssUrl;
+
+        // 7. sing-box JSON
+        const singboxObj = {
+            type: type,
+            tag: decodeURIComponent(tag),
+            server: server,
+            server_port: parseInt(port) || 443,
+            uuid: uuid
+        };
+        if (type === 'vless' && flow) singboxObj.flow = flow;
+        if (type === 'vless' && packetEncoding) singboxObj.packet_encoding = packetEncoding;
+        
+        if (security !== 'none') {
+            singboxObj.tls = {
+                enabled: true,
+                server_name: sni
+            };
+            if (fp) singboxObj.tls.utls = { enabled: true, fingerprint: fp };
+            if (security === 'reality') {
+                singboxObj.tls.reality = {
+                    enabled: true,
+                    public_key: pbk,
+                    short_id: sid
+                };
+            }
+        }
+        document.getElementById('singboxResult').textContent = JSON.stringify(singboxObj, null, 2);
+    }
+
+    // 兼容性更好的复制方法
+    function copyTextToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        } else {
+            return new Promise((resolve, reject) => {
+                let textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy') ? resolve() : reject(new Error('Copy failed'));
+                } catch (err) {
+                    reject(err);
+                } finally {
+                    textArea.remove();
+                }
+            });
+        }
+    }
+
+    // 复制单个
+    function copyText(elementId, btn) {
+        const text = document.getElementById(elementId).textContent;
+        copyTextToClipboard(text).then(() => {
+            const originalText = btn.textContent;
+            btn.textContent = '已复制';
+            btn.style.color = 'var(--primary-color)';
+            btn.style.borderColor = 'var(--primary-color)';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.color = '';
+                btn.style.borderColor = '';
+            }, 2000);
+            showToast("复制成功");
+        }).catch(err => {
+            showToast("复制失败");
+        });
+    }
+
+    // 复制全部
+    function copyAll() {
+        const text = `VLESS:\n${document.getElementById('vlessResult').textContent}\n\n` +
+                     `VMess:\n${document.getElementById('vmessResult').textContent}\n\n` +
+                     `AnyTLS:\n${document.getElementById('anytlsResult').textContent}\n\n` +
+                     `Hysteria2:\n${document.getElementById('hysteria2Result').textContent}\n\n` +
+                     `Trojan:\n${document.getElementById('trojanResult').textContent}\n\n` +
+                     `ShadowSocks:\n${document.getElementById('ssResult').textContent}\n\n` +
+                     `sing-box JSON:\n${document.getElementById('singboxResult').textContent}`;
+        copyTextToClipboard(text).then(() => {
+            showToast("已复制全部格式");
+        }).catch(err => {
+            showToast("复制失败");
+        });
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    // --- 解析历史逻辑开始 ---
+    let historyData = JSON.parse(localStorage.getItem('nodeHistory') || '[]');
+    let lastSyncTimestamp = localStorage.getItem('lastSyncTime') || '';
+
+    function addHistory(type, name) {
+        const now = new Date();
+        const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const syncTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        
+        // 简单去重：如果最新一条的名称和类型完全一样，就不重复添加
+        if (historyData.length > 0 && historyData[0].name === name && historyData[0].type === type) {
+            return;
+        }
+        
+        const id = Date.now().toString(); // 用时间戳作为唯一标识
+        historyData.unshift({ id, type, name, time: timeStr });
+        
+        if (historyData.length > 20) historyData.pop(); // 最多保存20条
+        
+        lastSyncTimestamp = syncTimeStr;
+        saveHistory();
+        renderHistory();
+    }
+
+    function deleteHistoryItem(id) {
+        historyData = historyData.filter(item => item.id !== id);
+        const now = new Date();
+        lastSyncTimestamp = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        saveHistory();
+        renderHistory();
+    }
+
+    function clearAllHistory() {
+        if (historyData.length === 0) return;
+        if (confirm("确定要清除所有解析历史吗？")) {
+            historyData = [];
+            const now = new Date();
+            lastSyncTimestamp = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            saveHistory();
+            renderHistory();
+            showToast("历史已清空");
+        }
+    }
+
+    function refreshHistory() {
+        historyData = JSON.parse(localStorage.getItem('nodeHistory') || '[]');
+        const now = new Date();
+        lastSyncTimestamp = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        saveHistory();
+        renderHistory();
+        showToast("历史记录已刷新");
+    }
+
+    function saveHistory() {
+        localStorage.setItem('nodeHistory', JSON.stringify(historyData));
+        localStorage.setItem('lastSyncTime', lastSyncTimestamp);
+    }
+
+    // 根据协议获取颜色
+    function getProtocolColor(type) {
+        const colors = {
+            'vless': '#0ea5e9',
+            'vmess': '#8b5cf6',
+            'anytls': '#f59e0b',
+            'hysteria2': '#ef4444',
+            'trojan': '#f97316',
+            'ss': '#3b82f6'
+        };
+        return colors[type.toLowerCase()] || '#0d7a6b';
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('historyContainer');
+        const list = document.getElementById('historyList');
+        const footer = document.getElementById('historyFooter');
+        const syncTimeSpan = document.getElementById('lastSyncTime');
+        
+        if (historyData.length === 0) {
+            container.classList.remove('hidden');
+            container.textContent = "暂无历史记录，解析成功后会保存在这里。";
+            list.classList.add('hidden');
+            footer.classList.add('hidden');
+        } else {
+            container.classList.add('hidden');
+            list.classList.remove('hidden');
+            footer.classList.remove('hidden');
+            
+            syncTimeSpan.textContent = lastSyncTimestamp || '--:--:--';
+
+            list.innerHTML = historyData.map(item => `
+                <li class="history-item">
+                    <div class="history-left">
+                        <span class="history-dot" style="background-color: ${getProtocolColor(item.type)}"></span>
+                        <div class="history-content">
+                            <div class="history-title" title="${item.name || '未命名节点'}">${item.name || '未命名节点'}</div>
+                            <div class="history-meta">${item.type} · ${item.time}</div>
+                        </div>
+                    </div>
+                    <button class="history-delete" onclick="deleteHistoryItem('${item.id}')">删除</button>
+                </li>
+            `).join('');
+        }
+    }
+
+    // 绑定按钮事件
+    document.getElementById('btnClearAllHistory').addEventListener('click', clearAllHistory);
+    document.getElementById('btnRefreshHistory').addEventListener('click', refreshHistory);
+    
+    // 初始化渲染历史
+    renderHistory();
+    // --- 解析历史逻辑结束 ---
+
+    // 绑定表单修改事件实现实时更新
+    const formInputs = document.querySelectorAll('.form-control');
+    formInputs.forEach(input => {
+        input.addEventListener('input', () => {
+            if(document.getElementById('resultCard').classList.contains('hidden')) return;
+            try {
+                generateResults();
+            } catch (e) {}
+        });
+    });
+</script>
+</body>
+</html>
